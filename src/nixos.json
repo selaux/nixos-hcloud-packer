@@ -1,0 +1,61 @@
+{
+  "variables": {
+    "hcloud_token": "{{env `HCLOUD_TOKEN`}}",
+    "ssh_key": "{{env `HCLOUD_SSH_KEY`}}",
+    "snapshot_name": "{{env `HCLOUD_SNAPSHOT_NAME`}}",
+    "location": "nbg1",
+    "server_type": "cx11",
+    "nixos_version": "18.09"
+  },
+  "sensitive-variables": ["hcloud_token"],
+  "builders": [
+    {
+      "type": "hcloud",
+      "token": "{{user `hcloud_token`}}",
+      "image": "ubuntu-18.04",
+      "location": "{{user `location`}}",
+      "server_type": "{{user `server_type`}}",
+      "ssh_username": "root",
+      "server_name": "{{user `snapshot_name`}}-builder",
+      "snapshot_name": "{{user `snapshot_name`}}",
+      "rescue": "linux64"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "nixos/configuration.nix",
+      "destination": "/root/configuration.nix"
+    },
+    {
+      "type": "shell",
+      "script": "scripts/setup-nix.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'Installing dependencies for installation via Nix'",
+        ". /root/.nix-profile/etc/profile.d/nix.sh",
+        "nix-channel --add https://nixos.org/channels/nixos-{{user `nixos_version`}} nixpkgs",
+        "nix-channel --update",
+        "nix-env --quiet -iE \"_: with import <nixpkgs> {}; with import <nixpkgs/nixos> { configuration = {}; }; with config.system.build; [ jq nixos-install ]\"",
+
+        "echo 'Formatting disk'",
+        "mkfs.ext4 -L root /dev/sda1",
+        "mount /dev/sda1 /mnt",
+
+        "echo 'Copying Configuration'",
+        "mkdir -p /mnt/etc/nixos",
+        "cp /root/configuration.nix /mnt/etc/nixos/",
+
+        "echo 'Patching ssh key into configuration.nix'",
+        "export SSH_KEY=\"$(curl -s -H 'Authorization: Bearer {{user `hcloud_token`}}' https://api.hetzner.cloud/v1/ssh_keys?name={{user `ssh_key`}} | jq '.ssh_keys[0].public_key')\"",
+        "sed -i -e \"s#''ssh_key''#${SSH_KEY}#g\" /mnt/etc/nixos/configuration.nix",
+
+        "echo 'Installing NixOS based on the following configuration.nix'",
+        "cat /mnt/etc/nixos/configuration.nix",
+        "PATH=\"$PATH\" NIX_PATH=\"$NIX_PATH\" `which nixos-install` --root /mnt  --no-root-passwd"
+      ]
+    }
+  ]
+}
