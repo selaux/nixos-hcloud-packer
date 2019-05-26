@@ -3,9 +3,9 @@
     "hcloud_token": "{{env `HCLOUD_TOKEN`}}",
     "ssh_key": "{{env `HCLOUD_SSH_KEY`}}",
     "snapshot_name": "{{env `HCLOUD_SNAPSHOT_NAME`}}",
-    "location": "nbg1",
+    "location": "{{env `HCLOUD_SNAPSHOT_LOCATION`}}",
     "server_type": "cx11",
-    "nixos_version": "18.09"
+    "nixos_version": "{{env `HCLOUD_SNAPSHOT_NIXOS_VERSION`}}"
   },
   "sensitive-variables": ["hcloud_token"],
   "builders": [
@@ -18,6 +18,9 @@
       "ssh_username": "root",
       "server_name": "{{user `snapshot_name`}}-builder",
       "snapshot_name": "{{user `snapshot_name`}}",
+      "snapshot_labels": {
+        "snapshot_name": "{{user `snapshot_name`}}"
+      },
       "rescue": "linux64"
     }
   ],

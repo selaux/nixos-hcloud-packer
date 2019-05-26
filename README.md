@@ -8,9 +8,13 @@ Based on: https://nixos.org/nixos/manual/index.html#sec-installing-from-other-di
 
 ```
 nix-build
+
 export HCLOUD_TOKEN="your-token"
 export HCLOUD_SSH_KEY="name-of-ssh-key-in-hetzner-cloud"
 export HCLOUD_SNAPSHOT_NAME="nixos-18.09-2019-03-29"
+export HCLOUD_SNAPSHOT_LOCATION="nbg1"
+export HCLOUD_SNAPSHOT_NIXOS_VERSION="19.03"
+
 result/bin/build-snapshot
 ```
 
