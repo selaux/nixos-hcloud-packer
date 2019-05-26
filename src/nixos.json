@@ -44,8 +44,10 @@
         "nix-env --quiet -iE \"_: with import <nixpkgs> {}; with import <nixpkgs/nixos> { configuration = {}; }; with config.system.build; [ jq nixos-install ]\"",
 
         "echo 'Formatting disk'",
+        "(echo o; echo n; echo p; echo 1; echo; echo; echo a; echo w) | fdisk /dev/sda",
         "mkfs.ext4 -L root /dev/sda1",
         "mount /dev/sda1 /mnt",
+        "df -h",
 
         "echo 'Copying Configuration'",
         "mkdir -p /mnt/etc/nixos",
