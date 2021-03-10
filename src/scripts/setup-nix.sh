@@ -12,4 +12,4 @@ for i in $(seq 1 32); do
     useradd --home-dir /var/empty --gid nixbld --groups nixbld --no-create-home --no-user-group --system --shell /usr/sbin/nologin --uid $((30000 + i)) nixbld$i
 done
 
-curl -s https://nixos.org/nix/install | sh
+curl -Ls https://nixos.org/nix/install | sh
